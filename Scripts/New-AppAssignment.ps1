@@ -13,10 +13,11 @@
     Author:      Nickolaj Andersen
     Contact:     @NickolajA
     Created:     2023-10-08
-    Updated:     2023-10-08
+    Updated:     2026-10-03
 
     Version history:
     1.0.0 - (2023-10-08) Script created
+    1.0.1 - (2026-10-03) Accept 'included'/'excluded' GroupMode values from the App.json template, fixed EnableRestartGracePeriod and RestartGracePeriodInMinutes conversion for group assignments
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param (
@@ -128,8 +129,10 @@ Process {
                                     Write-Output -InputObject "Preparing assignment parameters for group with ID: '$($AppAssignmentItem.GroupID)'"
 
                                     # Construct required part of parameter input data for assignment
-                                    switch ($AppAssignmentItem.GroupMode.ToLower()) {
-                                        "include" {
+                                    # Accept both the 'included'/'excluded' values used in the App.json template and the shorter 'include'/'exclude' form
+                                    $AppAssignmentGroupMode = ([string]$AppAssignmentItem.GroupMode).ToLower()
+                                    switch -Regex ($AppAssignmentGroupMode) {
+                                        "^include(d)?$" {
                                             # Construct required part of parameter input data for assignment
                                             $AppAssignmentArgs = @{
                                                 "Include" = $true
@@ -156,10 +159,10 @@ Process {
                                                 $AppAssignmentArgs.Add("DeliveryOptimizationPriority", $AppAssignmentItem.DeliveryOptimizationPriority)
                                             }
                                             if (-not([string]::IsNullOrEmpty($AppAssignmentItem.EnableRestartGracePeriod))) {
-                                                $AppAssignmentArgs.Add("EnableRestartGracePeriod", $AppAssignmentItem.EnableRestartGracePeriod)
+                                                $AppAssignmentArgs.Add("EnableRestartGracePeriod", [System.Convert]::ToBoolean($AppAssignmentItem.EnableRestartGracePeriod))
                                             }
                                             if (-not([string]::IsNullOrEmpty($AppAssignmentItem.RestartGracePeriodInMinutes))) {
-                                                $AppAssignmentArgs.Add("RestartGracePeriod", [System.Convert]::ToBoolean($AppAssignmentItem.RestartGracePeriodInMinutes))
+                                                $AppAssignmentArgs.Add("RestartGracePeriod", $AppAssignmentItem.RestartGracePeriodInMinutes)
                                             }
                                             if (-not([string]::IsNullOrEmpty($AppAssignmentItem.RestartCountDownDisplayInMinutes))) {
                                                 $AppAssignmentArgs.Add("RestartCountDownDisplay", $AppAssignmentItem.RestartCountDownDisplayInMinutes)
@@ -176,14 +179,14 @@ Process {
 
                                             try {
                                                 # Create application assignment
-                                                Write-Output -InputObject "Adding '$($AppAssignmentItem.GroupMode.ToLower())' assignment with intent '$($AppAssignmentItem.Intent.ToLower())' for group with ID: '$($AppAssignmentItem.GroupID)'"
+                                                Write-Output -InputObject "Adding '$($AppAssignmentGroupMode)' assignment with intent '$($AppAssignmentItem.Intent.ToLower())' for group with ID: '$($AppAssignmentItem.GroupID)'"
                                                 $Win32AppAssignment = Add-IntuneWin32AppAssignmentGroup @AppAssignmentArgs
                                             }
                                             catch [System.Exception] {
                                                 Write-Warning -Message "An error occurred while attempting to create assignment for group with ID: '$($AppAssignmentItem.GroupID)'. Error message: $($_.Exception.Message)"
                                             }
                                         }
-                                        "exclude" {
+                                        "^exclude(d)?$" {
                                             # Construct required part of parameter input data for assignment
                                             $AppAssignmentArgs = @{
                                                 "Exclude" = $true
@@ -195,12 +198,15 @@ Process {
 
                                             try {
                                                 # Create application assignment
-                                                Write-Output -InputObject "Adding '$($AppAssignmentItem.GroupMode.ToLower())' assignment with intent '$($AppAssignmentItem.Intent.ToLower())' for group with ID '$($AppAssignmentItem.GroupID)'"
+                                                Write-Output -InputObject "Adding '$($AppAssignmentGroupMode)' assignment with intent '$($AppAssignmentItem.Intent.ToLower())' for group with ID '$($AppAssignmentItem.GroupID)'"
                                                 $Win32AppAssignment = Add-IntuneWin32AppAssignmentGroup @AppAssignmentArgs
                                             }
                                             catch [System.Exception] {
                                                 Write-Warning -Message "An error occurred while attempting to create assignment for group with ID: '$($AppAssignmentItem.GroupID)'. Error message: $($_.Exception.Message)"
                                             }
+                                        }
+                                        default {
+                                            Write-Warning -Message "Unsupported GroupMode '$($AppAssignmentItem.GroupMode)' for group with ID: '$($AppAssignmentItem.GroupID)', expected 'included' or 'excluded'. Skipping assignment"
                                         }
                                     }
                                 }
