@@ -29,6 +29,13 @@ parameters:
     values:
     - 'Yes'
     - 'No'
+  - name: removePreviousAssignments
+    displayName: Remove assignments from previous app versions
+    type: string
+    default: 'No'
+    values:
+    - 'Yes'
+    - 'No'
 
 variables:
 - group: IntuneAppFactory
@@ -323,6 +330,43 @@ stages:
       displayName: New-AppAssignment
       inputs:
         filePath: 'Scripts/New-AppAssignment.ps1'
+        arguments: -TenantID $(TenantID) -ClientID $(ClientID) -ClientSecret $(SP-IntuneAppFactory-ClientSecret)
+    - task: DeleteFiles@1
+      name: cleanup_artifacts
+      inputs:
+        SourceFolder: '$(Build.BinariesDirectory)'
+        Contents: '**'
+# Stage: 10
+# - Description: Remove assignments from previous versions of all applications that were published to Intune
+# - Input file required: AppsAssignList.json (included in AppsPublishedList artifact)
+# - Output file created: None
+- stage: remove_previous_assignments
+  dependsOn:
+  - test_environment
+  - prepare_environment
+  - check_app_files
+  - check_new_app_version
+  - download_new_apps
+  - prepare_app_files
+  - publish_apps
+  - assign_apps
+  condition: and(succeeded(), eq(dependencies.publish_apps.outputs['publish_apps.new_app.shouldrun'], 'true'), eq('${{ parameters.removePreviousAssignments }}', 'Yes'), eq('${{ parameters.operationalMode }}', 'Publish'))
+  jobs:
+  - job: remove_previous_assignments
+    timeoutInMinutes: 60
+    steps:
+    - task: DownloadBuildArtifacts@0
+      name: download_assign_artifacts
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: AppsPublishedList
+        downloadPath: '$(Build.ArtifactStagingDirectory)'
+    - task: PowerShell@2
+      name: remove_assignment
+      displayName: Remove-AppAssignment
+      inputs:
+        filePath: 'Scripts/Remove-AppAssignment.ps1'
         arguments: -TenantID $(TenantID) -ClientID $(ClientID) -ClientSecret $(SP-IntuneAppFactory-ClientSecret)
     - task: DeleteFiles@1
       name: cleanup_artifacts

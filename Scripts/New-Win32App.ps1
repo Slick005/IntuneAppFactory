@@ -13,12 +13,13 @@
     Author:      Nickolaj Andersen
     Contact:     @NickolajA
     Created:     2022-04-20
-    Updated:     2024-03-04
+    Updated:     2026-10-03
 
     Version history:
     1.0.0 - (2020-09-26) Script created
     1.0.1 - (2023-05-29) Fixed bugs mention in release notes for Intune App Factory 1.0.1
     1.0.2 - (2024-03-04) Added support for ScopeTagName parameter, added Assignment handling
+    1.0.3 - (2026-10-03) Added IntuneAppNamingConvention to AppsAssignList.json, used when removing assignments from previous versions
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param (
@@ -634,6 +635,7 @@ Process {
                     $AppListItem = [PSCustomObject]@{
                         "IntuneAppName" = $App.IntuneAppName
                         "IntuneAppObjectID" = $Win32App.id
+                        "IntuneAppNamingConvention" = $App.IntuneAppNamingConvention
                         "AppPublishFolderPath" = $App.AppPublishFolderPath
                         "AppSetupFileName" = $App.AppSetupFileName
                         "AppPublishPackageFolder" = $OutputFolder
