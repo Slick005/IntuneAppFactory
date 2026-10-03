@@ -105,8 +105,14 @@ foreach ($App in $AppList.Apps) {
         if ($Assignment.Intent -notin @("available", "required", "uninstall")) {
             Add-Error -File $AppJsonFile -Message "[$($Name)] Assignment Intent '$($Assignment.Intent)' must be available, required or uninstall"
         }
-        if (($Assignment.Type -eq "Group") -and ($Assignment.GroupMode -notin @("include", "exclude"))) {
-            Add-Error -File $AppJsonFile -Message "[$($Name)] Assignment GroupMode '$($Assignment.GroupMode)' must be include or exclude"
+        if ($Assignment.Type -eq "Group") {
+            if ($Assignment.GroupMode -in @("included", "excluded")) {
+                # Older versions of New-AppAssignment.ps1 only match the short forms and skip the assignment
+                Write-Output -InputObject "::warning file=$($AppJsonFile)::[$($Name)] Assignment GroupMode '$($Assignment.GroupMode)' is skipped by versions of New-AppAssignment.ps1 that only accept include or exclude"
+            }
+            elseif ($Assignment.GroupMode -notin @("include", "exclude")) {
+                Add-Error -File $AppJsonFile -Message "[$($Name)] Assignment GroupMode '$($Assignment.GroupMode)' must be include or exclude"
+            }
         }
         if (-not([string]::IsNullOrEmpty($Assignment.FilterMode)) -and ($Assignment.FilterMode -notin @("include", "exclude"))) {
             Add-Error -File $AppJsonFile -Message "[$($Name)] Assignment FilterMode '$($Assignment.FilterMode)' must be include or exclude"

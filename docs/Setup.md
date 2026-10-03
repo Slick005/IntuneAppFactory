@@ -77,6 +77,6 @@ For a first run, use `Verify`, then `Package`, then `Publish`.
 
 `AppFolderName` must match the folder name under `Apps` exactly, including case. Windows agents don't care about case, but other systems do.
 
-### Known template issue: assignment `GroupMode`
+### Assignment `GroupMode` values
 
-In the `Assignment` section of `Templates/Application/App.json`, `GroupMode` offers `included` and `excluded`. `New-AppAssignment.ps1` only matches `include` and `exclude`, so a group assignment using the template's wording is silently skipped. Use `include` or `exclude` until the template is fixed.
+Use `include` or `exclude` for `GroupMode` in group assignments. The `App.json` template offers `included` and `excluded`, but the version of `New-AppAssignment.ps1` in this branch only matches the short forms, so a group assignment using the template's wording is skipped without an error. The short forms keep working after the script is changed to accept both spellings.
