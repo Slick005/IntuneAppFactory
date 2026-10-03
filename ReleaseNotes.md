@@ -1,5 +1,9 @@
 # Release notes for IntuneAppFactory
 
+## Unreleased
+- A new phase in the `publish.yml` file named `remove_previous_assignments` has been added, controlled by the new `removePreviousAssignments` pipeline parameter (default `No`). When set to `Yes`, the `Remove-AppAssignment.ps1` script removes all assignments from previous versions of each newly published application, so devices and users are only targeted by the latest version. Previous versions are matched on the same publisher and the display name produced by the app's `IntuneAppNamingConvention`, and only versions lower than the newly published one are changed. The previous versions themselves are kept in Intune.
+- The `AppsAssignList.json` file created by `New-Win32App.ps1` now includes the `IntuneAppNamingConvention` property.
+
 ## 1.1.0
 - A new required property in the appList.json file called `IntuneAppNamingConvention` has been added, with the following possible values: `PublisherAppNameAppVersion`, `PublisherAppName`, `AppNameAppVersion` or `AppName`. This property controls how the application published to Intune will be named. For example, if the `IntuneAppNamingConvention` property is set to `PublisherAppName`, the name of the application in Intune would be a combination of the `AppPublisher` and the `IntuneAppName` properties, resulting in e.g. 'Igor Pavlov 7-Zip'.
 - Fixed a bug in the `Get-EvergreenAppItem` function referenced in issue #18.
