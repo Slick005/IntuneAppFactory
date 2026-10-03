@@ -30,7 +30,7 @@
         },
         {
             "IntuneAppName": "VLC",
-            "IntuneAppNamingConvention": "AppNameAndVersion",
+            "IntuneAppNamingConvention": "AppNameAppVersion",
             "AppPublisher": "VideoLAN",
             "AppSource": "Evergreen",
             "AppID": "VideoLanVlcPlayer",
